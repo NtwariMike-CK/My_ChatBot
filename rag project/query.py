@@ -2,7 +2,7 @@ import argparse
 import os
 import chromadb
 from langchain_community.vectorstores import Chroma
-from langchain.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.llms import HuggingFacePipeline
 from langchain.prompts import ChatPromptTemplate
 from transformers import pipeline
