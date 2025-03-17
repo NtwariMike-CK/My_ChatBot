@@ -24,11 +24,7 @@ if not os.path.exists(DATA_PATH):
 
 print(f"✅ Directory found: {DATA_PATH}")
 
-# DATA_PATH = os.path.abspath("Final chatbot/rag project/docs/")
-
 # Initialize ChromaDB client (Persistent storage) the location to store the db
-# Define the path to the database folder dynamically
-
 CHROMA_PATH = os.path.join(BASE_DIR, "chroma_db")
 
 # Ensure the path exists or create it
@@ -37,8 +33,6 @@ os.makedirs(CHROMA_PATH, exist_ok=True)
 print(f"✅ Database path set to: {CHROMA_PATH}")
 
 
-# CHROMA_PATH = "chroma"
-CHROMA_PATH = os.path.abspath("Final chatbot/rag project/chroma_db")
 # Define the prompt template
 PROMPT_TEMPLATE = """
 Answer the question based only on the following context:
@@ -51,7 +45,6 @@ Answer the question based on the above context: {question}
 """
 
 # Initialize HuggingFace Embeddings
-# embedding_function = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
 embeddings_function = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")  # Better performance for English content
                                             
 # Load the language model (HuggingFace Pipeline)
@@ -68,8 +61,6 @@ def main(query_text):
     # args = parser.parse_args()
     # query_text = args.query_text
 
-    # Load the ChromaDB
-    db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
 
     # Search for similar documents
     results = db.similarity_search_with_relevance_scores(query_text, k=5)
@@ -82,8 +73,8 @@ def main(query_text):
     threshold = 0.5  # Lower base threshold
     
     # Dynamic threshold adjustment - if best result is very good, be more selective
-    # if best_score > 0.8:
-    #     threshold = 0.6
+    if best_score > 0.8:
+        threshold = 0.6
     
     # Filter results
     filtered_results = [(doc, score) for doc, score in results if score >= threshold]
