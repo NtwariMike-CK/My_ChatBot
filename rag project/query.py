@@ -52,7 +52,7 @@ text_generator = pipeline("text-generation", model="MBZUAI/LaMini-Flan-T5-783M")
 llm = HuggingFacePipeline(pipeline=text_generator)
 
 # Load the ChromaDB vector store
-db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
+db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embeddings_function)
 
 def main(query_text):
     # Create CLI
