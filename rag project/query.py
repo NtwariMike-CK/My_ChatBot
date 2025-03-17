@@ -8,6 +8,35 @@ from langchain.prompts import ChatPromptTemplate
 from transformers import pipeline
 
 # Set the ChromaDB storage path
+
+
+# Initialise the dir with data
+if "__file__" in globals():
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+else:
+    BASE_DIR = os.getcwd()  # In Colab, use the current working directory
+
+DATA_PATH = os.path.join(BASE_DIR, "docs")
+
+# Ensure the path exists before proceeding
+if not os.path.exists(DATA_PATH):
+    raise FileNotFoundError(f"❌ Directory NOT found: {DATA_PATH}")
+
+print(f"✅ Directory found: {DATA_PATH}")
+
+# DATA_PATH = os.path.abspath("Final chatbot/rag project/docs/")
+
+# Initialize ChromaDB client (Persistent storage) the location to store the db
+# Define the path to the database folder dynamically
+
+CHROMA_PATH = os.path.join(BASE_DIR, "chroma_db")
+
+# Ensure the path exists or create it
+os.makedirs(CHROMA_PATH, exist_ok=True)
+
+print(f"✅ Database path set to: {CHROMA_PATH}")
+
+
 # CHROMA_PATH = "chroma"
 CHROMA_PATH = os.path.abspath("Final chatbot/rag project/chroma_db")
 # Define the prompt template
