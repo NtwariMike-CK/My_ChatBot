@@ -44,8 +44,28 @@ print(f"✅ Database path set to: {CHROMA_PATH}")
 chroma_client = chromadb.PersistentClient(path=CHROMA_PATH)
 
 
+
+
+# Choose a more powerful embedding model
+def get_embeddings():
+    # Option 1: More powerful sentence transformer model
+    embeddings = HuggingFaceEmbeddings(
+        model_name="sentence-transformers/all-mpnet-base-v2"  # Better performance for English content
+    )
+    
+    # Option 2: For multilingual support but better performance
+    # embeddings = HuggingFaceEmbeddings(
+    #     model_name="sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
+    # )
+
+    # embeddings = HuggingFaceEmbeddings(
+    # model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+    # )
+    return embeddings
+
 # Load embedding model
-embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+embeddings = get_embeddings()
+
 
 # Function for running all
 def main():
@@ -63,20 +83,22 @@ def load_documents():
 
 def split_text(documents: list[Document]):
   text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size = 300,
-    chunk_overlap = 50,
-    length_function =len,
+    chunk_size = 1000,  # Increased chunk size for better context
+    chunk_overlap = 200,  # Increased overlap to maintain context between chunks
+    length_function = len,
     add_start_index = True,
-    separators=["\n\n", "\n", " ", ""]  # Prioritizes splitting by paragraphs, then newlines
+    # More intelligent separators prioritizing semantic boundaries
+    separators=["\n\n\n", "\n\n", "\n", ".", "!", "?", ";", ":", " ", ""]
   )
-  chunks = text_splitter.split_documents(documents)  # Correct: Use already loaded documents
-
-  print(f"split {len(documents)} documents into {len(chunks)} chunks")
-
-  document = chunks[3]
-  print(document.page_content)
-  print(document.metadata)
-
+  chunks = text_splitter.split_documents(documents)
+  
+  print(f"Split {len(documents)} documents into {len(chunks)} chunks")
+  
+  # Debug information
+  if chunks:
+    print(f"Sample chunk size: {len(chunks[0].page_content)} characters")
+    print(f"Sample chunk content: {chunks[0].page_content[:100]}...")
+  
   return chunks
 
 
