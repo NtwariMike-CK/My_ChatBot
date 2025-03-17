@@ -51,8 +51,9 @@ Answer the question based on the above context: {question}
 """
 
 # Initialize HuggingFace Embeddings
-embedding_function = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
-
+# embedding_function = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+embeddings_function = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")  # Better performance for English content
+                                            
 # Load the language model (HuggingFace Pipeline)
 text_generator = pipeline("text-generation", model="MBZUAI/LaMini-Flan-T5-783M")
 llm = HuggingFacePipeline(pipeline=text_generator)
@@ -71,17 +72,33 @@ def main(query_text):
     db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
 
     # Search for similar documents
-    results = db.similarity_search_with_relevance_scores(query_text, k=3)
+    results = db.similarity_search_with_relevance_scores(query_text, k=5)
     if len(results) == 0:
-        print(f"Unable No matching found.")
-        return
-    elif results[0][1] < 0.7:
-        print(f"The results are less similar hence no matching")
-        return
-
+        print(f"No matching documents found.")
+        return "I couldn't find any relevant information to answer your question."
+        
+    # Use a lower threshold or dynamic threshold based on the best match
+    best_score = results[0][1]
+    threshold = 0.5  # Lower base threshold
+    
+    # Dynamic threshold adjustment - if best result is very good, be more selective
+    # if best_score > 0.8:
+    #     threshold = 0.6
+    
+    # Filter results
+    filtered_results = [(doc, score) for doc, score in results if score >= threshold]
+    
+    if not filtered_results:
+        print(f"Retrieved documents with scores: {[score for _, score in results]}")
+        print(f"No documents met the similarity threshold of {threshold}")
+        return "I found some information, but it might not be relevant to your question."
 
     # Prepare context from retrieved documents
-    context_text = "\n\n---\n\n".join([doc.page_content for doc, _score in results])
+    context_text = "\n\n---\n\n".join([doc.page_content for doc, _score in filtered_results])
+    
+    # Include scores in debug output
+    print(f"Using {len(filtered_results)} documents with scores: {[score for _, score in filtered_results]}")
+    
     prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
     prompt = prompt_template.format(context=context_text, question=query_text)
 
@@ -89,10 +106,9 @@ def main(query_text):
     response_text = llm.predict(prompt)
 
     # Extract sources if available
-    sources = [doc.metadata.get("source", None) for doc, _score in results]
-    formatted_response = f"Response: {response_text}\n\nSources: {sources}"
-    print(formatted_response)
-
+    sources = [doc.metadata.get("source", None) for doc, _score in filtered_results]
+    return f"{response_text}\n\nSources: {sources}"
+    
 if __name__ == "__main__":
     while True:
       """Interactive chatbot that allows users to type messages continuously."""
