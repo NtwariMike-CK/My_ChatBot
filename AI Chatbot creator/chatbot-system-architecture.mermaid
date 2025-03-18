@@ -1,0 +1,35 @@
+flowchart TD
+    A[User Input] --> B[Input Processing]
+    B --> C{Document Size}
+    C -->|< 5 pages| D[Full Document Processing]
+    C -->|> 5 pages| E[Chunking & Embedding]
+    
+    F[Data Sources] --> G[Data Ingestion]
+    G --> H[Format Processing]
+    H --> I[Text Extraction]
+    I --> C
+    
+    D --> J[LLM Context Window]
+    E --> K[Vector Database]
+    K --> L[Retrieval System]
+    L --> J
+    
+    J --> M[Response Generation]
+    M --> N[Post-Processing]
+    N --> O[User Response]
+    
+    P[Feedback Loop] --> Q[System Improvement]
+    Q --> K
+    
+    subgraph "Supported Formats"
+    R[Web URLs]
+    S[PDFs]
+    T[TXT/MD]
+    U[Databases]
+    end
+    
+    subgraph "Multi-language Support"
+    V[Embedding Models]
+    W[Translation Layer]
+    X[LLM Prompting]
+    end
