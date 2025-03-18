@@ -1,0 +1,38 @@
+rag-chatbot-platform/
+├── frontend/                  # Next.js frontend application
+│   ├── public/                # Static assets
+│   ├── src/
+│   │   ├── app/               # Next.js app router
+│   │   │   ├── page.jsx       # Landing page
+│   │   │   ├── dashboard/     # Dashboard routes
+│   │   │   ├── chat/          # Chat interface
+│   │   │   ├── upload/        # Upload interface
+│   │   │   └── layout.jsx     # Main layout
+│   │   ├── components/        # React components
+│   │   ├── hooks/             # Custom React hooks
+│   │   ├── lib/               # Utility functions
+│   │   └── styles/            # Global CSS
+│   ├── package.json
+│   └── next.config.js
+│
+├── backend/                   # FastAPI backend
+│   ├── app/
+│   │   ├── api/               # API routes
+│   │   │   ├── routes/        # API endpoints
+│   │   │   └── deps.py        # Dependencies
+│   │   ├── core/              # Core modules
+│   │   │   ├── config.py      # Configuration
+│   │   │   └── security.py    # Security utilities
+│   │   ├── db/                # Database models
+│   │   ├── models/            # Pydantic models
+│   │   ├── services/          # Business logic
+│   │   │   ├── document_processor.py  # Document processing
+│   │   │   ├── web_scraper.py         # Web scraping
+│   │   │   ├── vector_store.py        # Vector storage
+│   │   │   └── rag_system.py          # RAG chatbot
+│   │   └── main.py            # Application entry point
+│   ├── requirements.txt       # Python dependencies
+│   └── Dockerfile             # Docker configuration
+│
+├── docker-compose.yml         # Docker compose configuration
+└── README.md                  # Project documentation
