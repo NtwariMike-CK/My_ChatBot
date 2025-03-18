@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chatbot Creator</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        .chat-container {
+            height: calc(100vh - 240px);
+            min-height: 400px;
+        }
+        .message-container {
+            max-height: calc(100vh - 340px);
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-indigo-600">AI Chatbot Creator</h1>
+            <p class="text-gray-600">Create a custom AI chatbot using your own data sources</p>
+        </header>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4">Upload Knowledge Base</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- File Upload -->
+                <div class="border rounded-lg p-4">
+                    <h3 class="font-medium mb-2">Upload Files</h3>
+                    <p class="text-sm text-gray-500 mb-3">PDF, TXT, or MD files</p>
+                    <form id="file-upload-form" class="flex flex-col">
+                        <input type="file" id="file-input" class="border p-2 rounded mb-2" accept=".pdf,.txt,.md">
+                        <button type="submit" class="bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700">Upload</button>
+                    </form>
+                </div>
+                
+                <!-- URL Input -->
+                <div class="border rounded-lg p-4">
+                    <h3 class="font-medium mb-2">Add Web URL</h3>
+                    <p class="text-sm text-gray-500 mb-3">Import content from a web page</p>
+                    <form id="url-form" class="flex flex-col">
+                        <input type="url" id="url-input" placeholder="https://example.com" class="border p-2 rounded mb-2">
+                        <button type="submit" class="bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700">Add URL</button>
+                    </form>
+                </div>
+                
+                <!-- Text Input -->
+                <div class="border rounded-lg p-4">
+                    <h3 class="font-medium mb-2">Paste Text</h3>
+                    <p class="text-sm text-gray-500 mb-3">Enter text directly</p>
+                    <form id="text-form" class="flex flex-col">
+                        <textarea id="text-input" placeholder="Enter your text here..." class="border p-2 rounded mb-2" rows="3"></textarea>
+                        <button type="submit" class="bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700">Add Text</button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Document List -->
+            <div class="mt-6">
+                <h3 class="font-medium mb-2">Added Documents</h3>
+                <ul id="document-list" class="border rounded-lg p-2 max-h-32 overflow-y-auto bg-gray-50">
+                    <li class="text-gray-500 text-sm italic">No documents added yet</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Chat Interface -->
+        <div class="bg-white rounded-lg shadow-lg chat-container">
+            <div class="border-b p-4">
+                <h2 class="text-xl font-semibold">Chat with Your Data</h2>
+            </div>
+            
+            <div id="messages" class="message-container p-4">
+                <div class="flex mb-4">
+                    <div class="flex-shrink-0 bg-indigo-600 text-white rounded-full h-8 w-8 flex items-center justify-center mr-3">
+                        AI
+                    </div>
+                    <div class="bg-gray-100 rounded-lg p-3 max-w-md">
+                        <p>Hello! I'm your AI assistant. Upload some documents, and I'll answer questions based only on that information.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t p-4">
+                <form id="chat-form" class="flex">
+                    <input type="text" id="question-input" placeholder="Ask a question about your documents..." class="flex-grow border rounded-l p-2" required>
+                    <button type="submit" class="bg-indigo-600 text-white py-2 px-4 rounded-r hover:bg-indigo-700">Send</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileForm = document.getElementById('file-upload-form');
+            const urlForm = document.getElementById('url-form');
+            const textForm = document.getElementById('text-form');
+            const chatForm = document.getElementById('chat-form');
+            const documentList = document.getElementById('document-list');
+            const messagesContainer = document.getElementById('messages');
+            
+            // Track uploaded documents
+            const documents = [];
+            
+            // File upload handler
+            fileForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const fileInput = document.getElementById('file-input');
+                
+                if (!fileInput.files.length) {
+                    alert('Please select a file');
+                    return;
+                }
+                
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+                
+                try {
+                    const response = await fetch('/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        addDocumentToList(fileInput.files[0].name, result.document_id);
+                        fileForm.reset();
+                    } else {
+                        alert('Error: ' + (result.error || 'Unknown error'));
+                    }
+                } catch (error) {
+                    alert('Upload failed: ' + error.message);
+                }
+            });
+            
+            // URL form handler
+            urlForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const urlInput = document.getElementById('url-input');
+                
+                if (!urlInput.value) {
+                    alert('Please enter a URL');
+                    return;
+                }
+                
+                const formData = new FormData();
+                formData.append('url', urlInput.value);
+                
+                try {
+                    const response = await fetch('/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        addDocumentToList(urlInput.value, result.document_id);
+                        urlForm.reset();
+                    } else {
+                        alert('Error: ' + (result.error || 'Unknown error'));
+                    }
+                } catch (error) {
+                    alert('URL processing failed: ' + error.message);
+                }
+            });
+            
+            // Text form handler
+            textForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const textInput = document.getElementById('text-input');
+                
+                if (!textInput.value) {
+                    alert('Please enter some text');
+                    return;
+                }
+                
+                const formData = new FormData();
+                formData.append('text', textInput.value);
+                formData.append('source', 'text_input_' + new Date().toISOString());
+                
+                try {
+                    const response = await fetch('/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        addDocumentToList('Text document ' + documents.length, result.document_id);
+                        textForm.reset();
+                    } else {
+                        alert('Error: ' + (result.error || 'Unknown error'));
+                    }
+                } catch (error) {
+                    alert('Text processing failed: ' + error.message);
+                }
+            });
+            
+            // Chat form handler
+            chatForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const questionInput = document.getElementById('question-input');
+                const question = questionInput.value.trim();
+                
+                if (!question) return;
+                
+                // Add user message to chat
+                addMessage(question, 'user');
+                questionInput.value = '';
+                
+                try {
+                    // Show typing indicator
+                    const typingIndicator = addTypingIndicator();
+                    
+                    const response = await fetch('/query', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ question })
+                    });
+                    
+                    // Remove typing indicator
+                    typingIndicator.remove();
+                    
+                    const result = await response.json();
+                    if (result.response) {
+                        addMessage(result.response, 'ai');
+                    } else {
+                        addMessage('Error: ' + (result.error || 'Unknown error'), 'ai');
+                    }
+                } catch (error) {
+                    addMessage('Sorry, there was an error processing your question.', 'ai');
+                }
+            });
+            
+            // Helper functions
+            function addDocumentToList(name, id) {
+                documents.push({ id, name });
+                
+                // Clear "no documents" message if it exists
+                if (documentList.querySelector('.text-gray-500')) {
+                    documentList.innerHTML = '';
+                }
+                
+                const li = document.createElement('li');
+                li.className = 'py-1 px-2 flex justify-between items-center';
+                li.innerHTML = `
+                    <span class="text-sm">${name}</span>
+                    <span class="text-xs text-gray-500">${id.substring(0, 8)}...</span>
+                `;
+                documentList.appendChild(li);
+                
+                // Add confirmation message
+                addMessage(`I've added "${name}" to my knowledge base. You can now ask questions about it.`, 'ai');
+            }
+            
+            function addMessage(text, sender) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'flex mb-4';
+                
+                if (sender === 'user') {
+                    messageDiv.innerHTML = `
+                        <div class="flex-grow"></div>
+                        <div class="bg-indigo-100 rounded-lg p-3 max-w-md">
+                            <p>${text}</p>
+                        </div>
+                        <div class="flex-shrink-0 bg-indigo-600 text-white rounded-full h-8 w-8 flex items-center justify-center ml-3">
+                            You
+                        </div>
+                    `;
+                } else {
+                    messageDiv.innerHTML = `
+                        <div class="flex-shrink-0 bg-indigo-600 text-white rounded-full h-8 w-8 flex items-center justify-center mr-3">
+                            AI
+                        </div>
+                        <div class="bg-gray-100 rounded-lg p-3 max-w-md">
+                            <p>${text}</p>
+                        </div>
+                    `;
+                }
+                
+                messagesContainer.appendChild(messageDiv);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+            
+            function addTypingIndicator() {
+                const typingDiv = document.createElement('div');
+                typingDiv.className = 'flex mb-4 typing-indicator';
+                typingDiv.innerHTML = `
+                    <div class="flex-shrink-0 bg-indigo-600 text-white rounded-full h-8 w-8 flex items-center justify-center mr-3">
+                        AI
+                    </div>
+                    <div class="bg-gray-100 rounded-lg p-3">
+                        <p class="typing-dots">Thinking<span>.</span><span>.</span><span>.</span></p>
+                    </div>
+                `;
+                
+                messagesContainer.appendChild(typingDiv);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                
+                return typingDiv;
+            }
+        });
+    </script>
+</body>
+</html>
