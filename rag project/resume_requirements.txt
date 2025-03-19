@@ -1,0 +1,27 @@
+# Core packages
+langchain==0.1.5
+langchain-community==0.0.15
+langchain-huggingface==0.0.7
+chromadb==0.4.22
+
+# Text processing and document loaders
+unstructured==0.11.0
+pypdf==3.17.3
+beautifulsoup4==4.12.2
+requests==2.31.0
+
+# Machine learning packages
+transformers==4.36.2
+torch==2.1.2
+sentence-transformers==2.2.2
+
+# Utility packages
+python-dotenv==1.0.0
+tqdm==4.66.1
+
+# URL handling
+urllib3==2.0.7
+requests-html==0.10.0
+
+# Optional: For better PDF extraction
+pdfminer.six==20221105
