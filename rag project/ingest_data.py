@@ -23,8 +23,12 @@ import chromadb
 from langchain_community.vectorstores import Chroma
 
 # Initialize directory paths
-BASE_DIR = os.getcwd()
-DATA_PATH = os.path.join(BASE_DIR, "data")
+if "__file__" in globals():
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+else:
+    BASE_DIR = os.getcwd()  # In Colab, use the current working directory
+
+DATA_PATH = os.path.join(BASE_DIR, "docs")
 CHROMA_PATH = os.path.join(BASE_DIR, "chroma_db")
 
 # Ensure directories exist
